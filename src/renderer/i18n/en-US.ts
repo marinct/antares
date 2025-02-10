@@ -174,6 +174,7 @@ export const enUS = {
       rollback: 'Rollback',
       ddl: 'DDL',
       data: 'Data',
+      paste: 'Paste',
       collation: 'Collation',
       resultsTable: 'Results table',
       unableEditFieldWithoutPrimary: 'Unable to edit a field without a primary key in resultset',

@@ -78,6 +78,19 @@
          </div>
       </div>
       <div
+         v-if="selectedRows.length === 1"
+         class="context-element"
+         @click="pasteCell"
+      >
+         <span class="d-flex">
+            <BaseIcon
+               icon-name="mdiContentPaste"
+               class="mr-1 mt-1 text-light"
+               :size="18"
+            /> {{ t('database.paste', 1) }}
+         </span>
+      </div>
+      <div
          v-if="selectedRows.length === 1 && selectedCell.isEditable && mode === 'table'"
          class="context-element"
          @click="duplicateRow"
@@ -172,7 +185,8 @@ const emit = defineEmits([
    'copy-cell',
    'copy-row',
    'duplicate-row',
-   'fill-cell'
+   'fill-cell',
+   'paste-cell'
 ]);
 
 const fakerMethods = {
@@ -242,6 +256,11 @@ const setNull = () => {
 
 const copyCell = () => {
    emit('copy-cell');
+   closeContext();
+};
+
+const pasteCell = () => {
+   emit('paste-cell');
    closeContext();
 };
 

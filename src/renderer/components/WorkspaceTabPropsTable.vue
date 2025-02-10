@@ -273,7 +273,7 @@ import WorkspaceTabPropsTableIndexesModal from '@/components/WorkspaceTabPropsTa
 import Tables from '@/ipc-api/Tables';
 import { useNotificationsStore } from '@/stores/notifications';
 import { useSettingsStore } from '@/stores/settings';
-import { useWorkspacesStore } from '@/stores/workspaces';
+import { Breadcrumb, useWorkspacesStore } from '@/stores/workspaces';
 
 const { t } = useI18n();
 

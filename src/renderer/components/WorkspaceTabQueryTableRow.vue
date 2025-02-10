@@ -9,7 +9,12 @@
          :key="cKey"
          class="td p-0"
          :class="{selected: selectedCell === cKey}"
-         @click="selectRow($event, cKey)"
+         @click="selectRow($event, cKey, {
+            id: row._antares_id,
+            orgField: cKey,
+            type: fields[cKey].type,
+            length: fields[cKey].charLength || fields[cKey].length
+         })"
 
          @contextmenu.prevent="openContext($event, {
             id: row._antares_id,
@@ -555,8 +560,19 @@ const prepareToDelete = () => {
    willBeDeleted.value = true;
 };
 
-const selectRow = (event: Event, field: string) => {
-   emit('select-row', event, props.row, field);
+const selectRow = (
+   event: Event,
+   field: string,
+   cell: {
+      id: string;
+      orgField: string;
+      type: string;
+      field?: string;
+      length: number | boolean;
+   }
+) => {
+   cell.field = field;
+   emit('select-row', event, props.row, field, cell);
 };
 
 const getKeyUsage = (keyName: string) => {

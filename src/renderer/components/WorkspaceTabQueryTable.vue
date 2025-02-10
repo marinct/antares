@@ -18,6 +18,7 @@
          @show-delete-modal="showDeleteConfirmModal"
          @set-null="setNull"
          @copy-cell="copyCell"
+         @paste-cell="pasteCell"
          @fill-cell="fillCell"
          @copy-row="copyRow"
          @duplicate-row="duplicateRow"
@@ -595,6 +596,23 @@ const copyCell = () => {
    copyText(valueToCopy);
 };
 
+const pasteCell = async () => {
+   const row = localResults.value.find((row: any) => selectedRows.value.includes(row._antares_id));
+   const value = await navigator.clipboard.readText();
+   const params = {
+      primary: primaryField.value?.name,
+      schema: getSchema(resultsetIndex.value),
+      table: getTable(resultsetIndex.value),
+      id: getPrimaryValue(row),
+      row,
+      orgRow: row,
+      field: selectedCell.value.field,
+      content: value
+   };
+
+   emit('update-field', params);
+};
+
 const copyRow = (format: string) => {
    let contentToCopy;
 
@@ -741,7 +759,7 @@ const applyUpdate = (params: TableUpdateParams) => {
    });
 };
 
-const selectRow = (event: KeyboardEvent, row: any, field: string) => {
+const selectRow = (event: KeyboardEvent, row: any, field: string, cell: any) => {
    selectedField.value = field;
    const selectedRowId = row._antares_id;
 
@@ -770,6 +788,12 @@ const selectRow = (event: KeyboardEvent, row: any, field: string) => {
    }
    else
       selectedRows.value = [selectedRowId];
+
+   if (cell && (event.target as HTMLElement).localName !== 'input') {
+      selectedCell.value = cell;
+      if (!selectedRows.value.includes(cell.id))
+         selectedRows.value = [cell.id];
+   }
 };
 
 const selectAllRows = (e: KeyboardEvent) => {
@@ -916,6 +940,10 @@ const onKey = async (e: KeyboardEvent) => {
          else
             copyRow(copyType);
       }
+   }
+   if ((e.ctrlKey || e.metaKey) && e.code === 'KeyV' && !e.altKey) {
+      if (selectedRows.value.length === 1)
+         pasteCell();
    }
 
    // row navigation stuff
