@@ -78,7 +78,7 @@
          </div>
       </div>
       <div
-         v-if="selectedRows.length === 1"
+         v-if="selectedRows.length === 1 && selectedCell.isEditable && mode === 'table'"
          class="context-element"
          @click="pasteCell"
       >

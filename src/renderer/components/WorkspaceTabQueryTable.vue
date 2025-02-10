@@ -941,10 +941,8 @@ const onKey = async (e: KeyboardEvent) => {
             copyRow(copyType);
       }
    }
-   if ((e.ctrlKey || e.metaKey) && e.code === 'KeyV' && !e.altKey) {
-      if (selectedRows.value.length === 1)
-         pasteCell();
-   }
+   if ((e.ctrlKey || e.metaKey) && e.code === 'KeyV' && !e.altKey && props.elementType === 'table' && selectedRows.value.length === 1)
+      pasteCell();
 
    // row navigation stuff
    if (!(e.ctrlKey || e.metaKey) && (e.code.includes('Arrow') || e.code === 'Tab') && sortedResults.value.length > 0 && !e.altKey) {
