@@ -5,18 +5,27 @@
       tabindex="0"
    >
       <div class="workspace-query-runner column col-12">
-         <QueryEditor
-            v-show="isSelected"
-            id="query-editor"
-            ref="queryEditor"
-            v-model="query"
-            :auto-focus="true"
-            :workspace="workspace"
-            :schema="breadcrumbsSchema"
-            :is-selected="isSelected"
-            :height="editorHeight"
-            editor-classes="editor-query"
-         />
+         <div class="workspace-query-runner-inner" :style="{ height: `${editorHeight}px` }">
+            <QueryEditor
+               v-show="isSelected"
+               id="query-editor"
+               ref="queryEditor"
+               v-model="query"
+               style="flex:1;"
+               :auto-focus="true"
+               :workspace="workspace"
+               :schema="breadcrumbsSchema"
+               :is-selected="isSelected"
+               :height="editorHeight"
+               editor-classes="editor-query"
+            />
+            <QueryBindingPanel
+               v-if="showBindingVars"
+               :parameters="bindingParameters"
+               :client="props.connection.client"
+               @change="updateBindings"
+            />
+         </div>
          <div ref="resizer" class="query-area-resizer" />
          <div ref="queryAreaFooter" class="workspace-query-runner-footer">
             <div class="workspace-query-buttons">
@@ -279,6 +288,7 @@ import { Ace } from 'ace-builds';
 import { ConnectionParams } from 'common/interfaces/antares';
 import { uidGen } from 'common/libs/uidGen';
 import { ipcRenderer } from 'electron';
+import { debounce } from 'lodash';
 import { storeToRefs } from 'pinia';
 import { format } from 'sql-formatter';
 import { Component, computed, onBeforeUnmount, onMounted, Prop, Ref, ref, toRaw, watch } from 'vue';
@@ -288,6 +298,7 @@ import BaseIcon from '@/components/BaseIcon.vue';
 import BaseLoader from '@/components/BaseLoader.vue';
 import BaseSelect from '@/components/BaseSelect.vue';
 import ModalHistory from '@/components/ModalHistory.vue';
+import QueryBindingPanel from '@/components/QueryBindingPanel.vue';
 import QueryEditor from '@/components/QueryEditor.vue';
 import WorkspaceTabQueryEmptyState from '@/components/WorkspaceTabQueryEmptyState.vue';
 import WorkspaceTabQueryTable from '@/components/WorkspaceTabQueryTable.vue';
@@ -357,6 +368,9 @@ const editorHeight = ref(200);
 const isQuerySaved = ref(false);
 const isHistoryOpen = ref(false);
 const debounceTimeout = ref(null);
+const showBindingVars = ref(false);
+const bindingParameters = ref([]);
+const bindingValues = ref<{ rawValues: Record<string, string>; values: Record<string, string> } | null>(null);
 
 const workspace = computed(() => getWorkspace(props.connection.uid));
 const breadcrumbsSchema = computed(() => workspace.value.breadcrumbs.schema || null);
@@ -374,6 +388,8 @@ const isChanged = computed(() => {
 
 watch(query, (val) => {
    clearTimeout(debounceTimeout.value);
+
+   shouldShowBindingPanel(val);
 
    debounceTimeout.value = setTimeout(() => {
       updateTabContent({
@@ -440,7 +456,152 @@ watch(isChanged, (val) => {
    setUnsavedChanges({ uid: props.connection.uid, tUid: props.tabUid, isChanged: val });
 });
 
-const runQuery = async (query: string) => {
+const shouldShowBindingPanel = (query: string) => {
+   const bindingVars = extractBindingVariables(query);
+   bindingParameters.value = bindingVars;
+   showBindingVars.value = bindingVars.length > 0;
+};
+
+const extractBindingVariables = (query: string) => {
+   // First, let's identify and remove multi-line comments
+   const multilineCommentRegex = /\/\*[\s\S]*?\*\//g;
+   const queryWithoutMultilineComments = query.replace(multilineCommentRegex, '');
+
+   // Split the query into lines to handle single-line comments
+   const lines = queryWithoutMultilineComments.split('\n');
+   const uncommentedLines = lines.map(line => {
+      const commentIndex = line.indexOf('--');
+      return commentIndex >= 0 ? line.substring(0, commentIndex) : line;
+   }).join('\n');
+
+   const bindings = new Map();
+
+   // Find all binding variables and their surrounding context
+   const bindingRegex = /:([a-zA-Z]\w*)/g;
+   const allBindings = new Set();
+
+   // Helper to extract context between parentheses
+   const getParenthesesContext = (text: string, startIndex: number): string => {
+      let parenCount = 0;
+      let start = -1;
+
+      // Look backwards for opening parenthesis
+      for (let i = startIndex; i >= 0; i--) {
+         if (text[i] === ')') parenCount++;
+         if (text[i] === '(') {
+            parenCount--;
+            if (parenCount === -1) {
+               start = i;
+               break;
+            }
+         }
+      }
+
+      if (start === -1) return '';
+
+      parenCount = 1;
+      // Look forward for closing parenthesis
+      for (let i = start + 1; i < text.length; i++) {
+         if (text[i] === '(') parenCount++;
+         if (text[i] === ')') {
+            parenCount--;
+            if (parenCount === 0) {
+               const context = text.substring(start, i + 1);
+               return context.replace(/:([a-zA-Z]\w*)/g, '_');
+            }
+         }
+      }
+      return '';
+   };
+
+   // Helper to get the surrounding words/operators
+   const getSurroundingContext = (text: string, matchIndex: number, varLength: number): string => {
+      const beforeMatch = text.substring(0, matchIndex).trim();
+      const afterMatch = text.substring(matchIndex + varLength).trim();
+
+      // Look for specific patterns
+      // 1. IS NULL, IS NOT NULL
+      const isNullMatch = afterMatch.match(/^IS\s+(?:NOT\s+)?NULL\b/i);
+      if (isNullMatch)
+         return `_ ${isNullMatch[0]}`;
+
+      // 2. Column comparison
+      const beforeWords = beforeMatch.split(/\s+/).slice(-2);
+      const columnMatch = beforeWords.find(word => /^[a-zA-Z]\w*(?:\.[a-zA-Z]\w*)?$/.test(word));
+      if (columnMatch) {
+         const operator = beforeWords[beforeWords.length - 1];
+         if (/^[=<>!]+$/.test(operator))
+            return `${columnMatch} ${operator} _`;
+
+         return columnMatch;
+      }
+
+      // 3. INTERVAL context
+      if (beforeMatch.toUpperCase().endsWith('INTERVAL')) {
+         const unitMatch = afterMatch.match(/^[A-Z]+\b/);
+         if (unitMatch)
+            return `INTERVAL _ ${unitMatch[0]}`;
+      }
+
+      // 4. Function context (first parent function)
+      const parenthesesContext = getParenthesesContext(text, matchIndex);
+      if (parenthesesContext) {
+         // Get function name if available
+         const beforeParens = text.substring(0, text.indexOf(parenthesesContext)).trim();
+         const funcMatch = beforeParens.match(/([A-Za-z]\w*)\s*$/);
+         if (funcMatch)
+            return `${funcMatch[1]}${parenthesesContext}`;
+
+         return parenthesesContext;
+      }
+
+      // 5. Default to nearby words
+      const nearbyWords = [
+         ...beforeWords.slice(-1),
+         '_',
+         ...afterMatch.split(/\s+/).slice(0, 1)
+      ].filter(Boolean);
+
+      return nearbyWords.join(' ');
+   };
+
+   let match;
+   while ((match = bindingRegex.exec(uncommentedLines)) !== null) {
+      const bindingVar = match[1];
+      allBindings.add(bindingVar);
+
+      if (!bindings.has(bindingVar)) {
+         const context = getSurroundingContext(uncommentedLines, match.index, match[0].length);
+         bindings.set(bindingVar, context);
+      }
+   }
+
+   return [...allBindings].map(name => ({
+      name,
+      column: bindings.get(name) || '',
+      type: inferTypeFromContext(bindings.get(name) || ''),
+      value: ''
+   }));
+};
+
+const inferTypeFromContext = (context: string): string => {
+   const contextLower = context.toLowerCase();
+
+   if (/\bis\s+(?:not\s+)?null\b/.test(contextLower)) return 'BOOLEAN';
+   if (/interval\s+_\s+(?:second|minute|hour|day|month|year)/.test(contextLower)) return 'INT';
+   if (/^id$|_id\s|^\(.*_id/.test(contextLower)) return 'INT';
+   if (/date|time|_at\s/.test(contextLower)) return 'DATETIME';
+   if (/price|amount|total|cost/.test(contextLower)) return 'DECIMAL';
+   if (/count|number|qty|quantity|days?|hours?|minutes?|seconds?/.test(contextLower)) return 'INT';
+
+   return 'VARCHAR';
+};
+
+const updateBindings = (event: { rawValues: Record<string, string>; values: Record<string, string> }) => {
+   bindingValues.value = event;
+};
+
+const runQueryInternal = async (query: string) => {
    if (!query || isQuering.value) return;
    isQuering.value = true;
 
@@ -489,6 +650,36 @@ const runQuery = async (query: string) => {
 
    isQuering.value = false;
    lastQuery.value = query;
+};
+
+const runQuery = async (query: string) => {
+   if (executeSelected.value) {
+      const selectedQuery = queryEditor.value.editor.getSelectedText();
+      if (selectedQuery) query = selectedQuery;
+      shouldShowBindingPanel(query);
+   }
+
+   if (bindingParameters.value.length > 0) {
+      let params = Object.fromEntries(bindingParameters.value.map(param => [param, null]));
+
+      if (bindingValues.value)
+         params = bindingValues.value.values;
+
+      await runQueryInternal(replaceBindings(query, params));
+   }
+   else
+      await runQueryInternal(query);
+};
+
+const replaceBindings = (query: string, values: Record<string, string>) => {
+   let finalQuery = query;
+   Object.entries(values).forEach(([paramName, value]) => {
+      finalQuery = finalQuery.replace(
+         new RegExp(`:${paramName}\\b`, 'g'),
+         value
+      );
+   });
+   return finalQuery;
 };
 
 const killTabQuery = async () => {
@@ -798,6 +989,12 @@ onMounted(() => {
    if (props.tab.filePath)
       loadFileContent(props.tab.filePath);
 
+   const debouncedSelection = debounce(() => {
+      const selectedQuery = queryEditor.value.editor.getSelectedText();
+      shouldShowBindingPanel(selectedQuery || query.value);
+   }, 300);
+   queryEditor.value.editor.selection.on('changeSelection', debouncedSelection);
+
    queryEditor.value.editor.container.addEventListener('contextmenu', (e) => {
       const InputMenu = Menu.buildFromTemplate([
          {
@@ -877,61 +1074,71 @@ onBeforeUnmount(() => {
    ipcRenderer.removeListener('save-file-as', saveFileAsListener);
    ipcRenderer.removeListener('save-content', saveContentListener);
 });
+
 </script>
 
 <style lang="scss">
 .workspace-tabs {
-  align-content: baseline;
+   align-content: baseline;
 
-  .workspace-query-runner {
-    position: relative;
+   .workspace-query-runner {
+      position: relative;
+      border-bottom: 1px solid $bg-color-gray;
 
-    .query-area-resizer {
-      height: 4px;
-      margin-top: -2px;
-      width: 100%;
-      cursor: ns-resize;
-      z-index: 99;
-      transition: background 0.2s;
-
-      &:hover {
-         background: var(--primary-color-dark);
-      }
-    }
-
-    .workspace-query-runner-footer {
-      display: flex;
-      flex-wrap: wrap;
-      row-gap: 0.4rem;
-      justify-content: space-between;
-      padding: 0.3rem 0.6rem 0.4rem;
-      align-items: center;
-      min-height: 42px;
-
-      .workspace-query-buttons,
-      .workspace-query-info {
-        display: flex;
-        align-items: center;
-
-        .btn {
-          display: flex;
-          align-self: center;
-          margin-right: 0.4rem;
-        }
+      .workspace-query-runner-inner {
+         position: relative;
+         display: flex;
+         flex-direction: row;
       }
 
-      .workspace-query-info {
-        overflow: visible;
+      .query-area-resizer {
+         height: 4px;
+         margin-top: -4px;
+         width: 100%;
+         cursor: ns-resize;
+         z-index: 99;
+         transition: background 0.2s;
+         position: sticky;
+
+         &:hover {
+            background: var(--primary-color-dark);
+         }
+      }
+
+      .workspace-query-runner-footer {
+         display: flex;
+         flex-wrap: wrap;
+         row-gap: 0.4rem;
+         justify-content: space-between;
+         padding: 0.3rem 0.6rem 0.4rem;
+         align-items: center;
+         min-height: 42px;
+         border-top: 1px solid $bg-color-gray;
+
+         .workspace-query-buttons,
+         .workspace-query-info {
+            display: flex;
+            align-items: center;
+
+            .btn {
+               display: flex;
+               align-self: center;
+               margin-right: 0.4rem;
+            }
+         }
+
+         .workspace-query-info {
+            overflow: visible;
 
         > div + div {
-          padding-left: 0.6rem;
-        }
+               padding-left: 0.6rem;
+            }
+         }
       }
-    }
-  }
+   }
 
-  .workspace-query-results {
-    min-height: 200px;
-  }
+   .workspace-query-results {
+      min-height: 200px;
+   }
 }
-</style>filePathsfilePathsfilePaths
+</style>
