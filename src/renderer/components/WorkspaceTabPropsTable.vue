@@ -102,6 +102,17 @@
                   />
                   <span>{{ t('database.ddl') }}</span>
                </button>
+               <button
+                  class="btn btn-dark btn-sm"
+                  @click="openDataTable()"
+               >
+                  <BaseIcon
+                     class="mr-1"
+                     icon-name="mdiTable"
+                     :size="24"
+                  />
+                  <span>{{ t('database.data') }}</span>
+               </button>
             </div>
             <div class="workspace-query-info">
                <div class="d-flex" :title="t('database.schema')">
@@ -286,6 +297,7 @@ const {
    getDatabaseVariable,
    refreshStructure,
    renameTabs,
+   newTab,
    changeBreadcrumbs,
    setUnsavedChanges
 } = workspacesStore;
@@ -809,6 +821,26 @@ const saveContentListener = () => {
    if (props.isSelected && !hasModalOpen && isChanged.value)
       saveChanges();
 };
+
+const setBreadcrumbs = (payload: Breadcrumb) => {
+   if (breadcrumbs.value.schema === payload.schema && breadcrumbs.value.table === payload.table) return;
+   changeBreadcrumbs(payload);
+};
+
+const openDataTable = () => {
+   newTab({
+      uid: props.connection.uid,
+      elementName: props.table,
+      schema: props.schema,
+      type: 'data',
+      elementType: 'table'
+   });
+   setBreadcrumbs({ schema: props.schema, table: props.table });
+};
+
+const breadcrumbs = computed(() => {
+   return workspace.value.breadcrumbs;
+});
 
 watch(() => props.schema, () => {
    if (props.isSelected) {
