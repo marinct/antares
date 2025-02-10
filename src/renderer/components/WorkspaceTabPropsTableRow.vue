@@ -101,7 +101,7 @@
                class="cell-content"
                @dblclick="editON($event, localLength, 'length')"
             >
-               <span v-if="localRow.enumValues">
+               <span v-if="localRow.enumValues" :title="localRow.enumValues">
                   {{ localRow.enumValues }}
                </span>
                <span v-else-if="localRow.numScale">

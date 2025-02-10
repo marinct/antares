@@ -272,4 +272,8 @@ defineExpose({ tableWrapper });
 .min-100 {
   min-width: 100px !important;
 }
+
+.table {
+   min-width: 100%;
+}
 </style>
