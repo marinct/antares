@@ -80,7 +80,11 @@ export const enUS = {
       title: 'Title',
       archive: 'Archive', // verb
       undo: 'Undo',
-      moveTo: 'Move to'
+      moveTo: 'Move to',
+      copied: 'Copied to clipboard',
+      copyError: 'Failed to copy to clipboard',
+      yes: 'Yes',
+      no: 'No'
    },
    connection: { // Database connection
       connection: 'Connection',
@@ -95,6 +99,7 @@ export const enUS = {
       connected: 'Connected',
       disconnect: 'Disconnect',
       disconnected: 'Disconnected',
+      connectionDetails: 'Connection Details',
       ssl: 'SSL',
       enableSsl: 'Enable SSL',
       privateKey: 'Private key',

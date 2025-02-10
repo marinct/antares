@@ -43,6 +43,14 @@
                      @click="refresh"
                   />
                </div>
+               <div :title="t('connection.connectionDetails')">
+                  <BaseIcon
+                     icon-name="mdiInformationOutline"
+                     :size="18"
+                     class="c-hand mr-2"
+                     @click="showConnectionInfo"
+                  />
+               </div>
                <div :title="t('connection.disconnect')">
                   <BaseIcon
                      icon-name="mdiPower"
@@ -153,6 +161,11 @@
          @reload="refresh"
       />
    </div>
+   <ModalConnectionDetails
+      v-if="showConnectionDetails"
+      :connection="connection"
+      @close-modal="showConnectionDetails = false"
+   />
 </template>
 
 <script setup lang="ts">
@@ -163,6 +176,7 @@ import { useI18n } from 'vue-i18n';
 
 import BaseIcon from '@/components/BaseIcon.vue';
 import BaseSelect from '@/components/BaseSelect.vue';
+import ModalConnectionDetails from '@/components/ModalConnectionDetails.vue';
 import ModalNewSchema from '@/components/ModalNewSchema.vue';
 import MiscContext from '@/components/WorkspaceExploreBarMiscContext.vue';
 import MiscFolderContext from '@/components/WorkspaceExploreBarMiscFolderContext.vue';
@@ -228,6 +242,7 @@ const selectedTable = ref(null);
 const selectedMisc = ref(null);
 const searchTerm = ref('');
 const searchMethod: Ref<'elements' | 'schemas'> = ref('elements');
+const showConnectionDetails = ref(false);
 
 const workspace = computed(() => {
    return getWorkspace(props.connection.uid);
@@ -313,6 +328,10 @@ const refresh = async () => {
       await refreshStructure(props.connection.uid);
       isRefreshing.value = false;
    }
+};
+
+const showConnectionInfo = () => {
+   showConnectionDetails.value = true;
 };
 
 const explorebarSearch = (event: KeyboardEvent) => {
