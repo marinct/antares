@@ -146,7 +146,7 @@ export const enUS = {
       total: 'Total',
       table: 'Table | Tables',
       view: 'View | Views',
-      materializedview: 'Materialized view | Materialized views',
+      materializedView: 'Materialized view | Materialized views',
       definer: 'Definer',
       algorithm: 'Algorithm',
       trigger: 'Trigger | Triggers',
@@ -410,6 +410,7 @@ export const enUS = {
       ignoreDuplicates: 'Ignore duplicates',
       wrongImportPassword: 'Wrong import password',
       wrongFileFormat: 'Wrong file format',
+      invalidFile: 'Invalid file',
       dataImportSuccess: 'Data successfully imported',
       note: 'Note | Notes',
       thereAreNoNotesYet: 'There are no notes yet',
@@ -425,7 +426,11 @@ export const enUS = {
       openNotes: 'Open notes',
       debugConsole: 'Debug console', // <- console tab name
       executedQueries: 'Executed queries', // <- console tab name
-      sizeLimitError: 'Maximum size of {size} exceeded'
+      sizeLimitError: 'Maximum size of {size} exceeded',
+      fullScreen: 'Full screen',
+      zoomIn: 'Zoom in',
+      zoomOut: 'Zoom out',
+      zoomReset: 'Reset zoom'
    },
    faker: { // Faker.js methods, used in random generated content
       address: 'Address',

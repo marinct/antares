@@ -2,6 +2,7 @@
 /* eslint-disable no-useless-escape */
 import { lineString, point, polygon } from '@turf/helpers';
 import { BIT, BLOB, DATE, DATETIME, FLOAT, IS_MULTI_SPATIAL, NUMBER, SPATIAL, TEXT_SEARCH } from 'common/fieldTypes';
+import * as antares from 'common/interfaces/antares';
 import * as moment from 'moment';
 
 import customizations from '../customizations';
@@ -208,4 +209,21 @@ export const jsonToSqlInsert = (args: {
       insertsString += insertStmt+';';
 
    return insertsString;
+};
+
+export const formatJsonForSqlWhere = (jsonValue: object, clientType: antares.ClientCode) => {
+   const formattedValue = JSON.stringify(jsonValue);
+
+   switch (clientType) {
+      case 'mysql':
+         return ` = CAST('${formattedValue}' AS JSON)`;
+      case 'maria':
+         return ` = '${formattedValue}'`;
+      case 'pg':
+         return `::text = '${formattedValue}'`;
+      case 'firebird':
+      case 'sqlite':
+      default:
+         return ` = '${formattedValue}'`;
+   }
 };

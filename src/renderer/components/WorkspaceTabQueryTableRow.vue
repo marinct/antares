@@ -445,7 +445,7 @@ const editON = async (field: string) => {
       return;
    }
 
-   if (BLOB.includes(type)) {
+   if (BLOB.includes(type) && props.fields[field].key !== 'pri') {
       isBlobEditor.value = true;
       editingContent.value = content || '';
       fileToUpload.value = null;
@@ -463,9 +463,12 @@ const editON = async (field: string) => {
             };
          }
       }
+
       emit('start-editing', field);
       return;
    }
+   else if (BLOB.includes(type) && props.fields[field].key === 'pri')// Disable edit on BLOB primary until we are sure it's not problematic
+      return;
 
    // Inline editable fields
    editingContent.value = originalContent.value;

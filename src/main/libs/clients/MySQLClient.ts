@@ -4,7 +4,9 @@ import dataTypes from 'common/data-types/mysql';
 import * as antares from 'common/interfaces/antares';
 import * as mysql from 'mysql2/promise';
 
+import * as EncodingToCharset from '../../../../node_modules/mysql2/lib/constants/encoding_charset.js';
 import { BaseClient } from './BaseClient';
+EncodingToCharset.utf8mb3 = 192; // To fix https://github.com/sidorares/node-mysql2/issues/1398 until not included in mysql2
 
 export class MySQLClient extends BaseClient {
    private _schema?: string;
@@ -171,13 +173,13 @@ export class MySQLClient extends BaseClient {
                remotePort: this._params.port
             });
 
-            dbConfig.host = (this._ssh.config as SSHConfig[] & { host: string }).host;
+            dbConfig.host = undefined;
             dbConfig.port = tunnel.localPort;
          }
          catch (err) {
             if (this._ssh) {
-               this._ssh.close();
                this._ssh.closeTunnel();
+               this._ssh.close();
             }
             throw err;
          }
@@ -225,8 +227,8 @@ export class MySQLClient extends BaseClient {
       clearInterval(this._keepaliveTimer);
       this._keepaliveTimer = undefined;
       if (this._ssh) {
-         this._ssh.close();
          this._ssh.closeTunnel();
+         this._ssh.close();
       }
    }
 
@@ -300,6 +302,8 @@ export class MySQLClient extends BaseClient {
             await this.connect();
             return this.getConnection(args, true);
          }
+         else if (error instanceof AggregateError)
+            throw new Error(error.errors.reduce((acc, curr) => acc +' | '+ curr.message, ''));
          else
             throw new Error(error.message);
       }
@@ -1753,9 +1757,7 @@ export class MySQLClient extends BaseClient {
       const resultsArr: antares.QueryResult[] = [];
       let paramsArr = [];
       const queries = args.split
-         ? sql.split(/((?:[^;'"]*(?:"(?:\\.|[^"])*"|'(?:\\.|[^'])*')[^;'"]*)+)|;/gm)
-            .filter(Boolean)
-            .map(q => q.trim())
+         ? this._querySplitter(sql, 'mysql')
          : [sql];
 
       const connection = await this.getConnection(args);

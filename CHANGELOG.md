@@ -2,6 +2,113 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.7.34](https://github.com/antares-sql/antares/compare/v0.7.33...v0.7.34) (2025-02-14)
+
+
+### Bug Fixes
+
+* issue with some SSH connections, definitely ([eb706c3](https://github.com/antares-sql/antares/commit/eb706c3e51e9cb7577febd291a33594c0650a34a))
+
+### [0.7.33](https://github.com/antares-sql/antares/compare/v0.7.32...v0.7.33) (2025-02-14)
+
+
+### Bug Fixes
+
+* issue with some SSH connections, fixes [#947](https://github.com/antares-sql/antares/issues/947) ([3129bf4](https://github.com/antares-sql/antares/commit/3129bf4baa5e72b1d79df986605fd5fad1dce291))
+
+### [0.7.32](https://github.com/antares-sql/antares/compare/v0.7.31...v0.7.32) (2025-02-14)
+
+
+### Bug Fixes
+
+* black background with light theme, fixes [#945](https://github.com/antares-sql/antares/issues/945) ([1d7053c](https://github.com/antares-sql/antares/commit/1d7053ce032efec8377d9500f2e24618f6381ab4))
+* enhance SVG support in connection customization, fixes [#939](https://github.com/antares-sql/antares/issues/939) ([49a3589](https://github.com/antares-sql/antares/commit/49a3589536d2e75a14125be7b874e29b60fb56c4))
+* improve error handling in SSH connection ([704f708](https://github.com/antares-sql/antares/commit/704f70819b21a42194d8f68cf9b58ba337f1ada7))
+* **PostgreSQL:** error with materialized view tabs ([41e797f](https://github.com/antares-sql/antares/commit/41e797f9e27db66370d3ae7750c057f708af76f9))
+
+### [0.7.31](https://github.com/antares-sql/antares/compare/v0.7.31-beta.5...v0.7.31) (2025-02-11)
+
+### [0.7.31-beta.5](https://github.com/antares-sql/antares/compare/v0.7.31-beta.4...v0.7.31-beta.5) (2025-02-09)
+
+
+### Bug Fixes
+
+* **devtoolsInstaller:** improve file path handling and increase chromium version ([7595e89](https://github.com/antares-sql/antares/commit/7595e892238d2a93c454e9c1f236915fb458eed1))
+* improve BLOB primary fields management, fixes [#938](https://github.com/antares-sql/antares/issues/938) ([72f8d42](https://github.com/antares-sql/antares/commit/72f8d4249f7f587d3e92b46cf7709ddab42107d4))
+* **Linux:** restored AppImage auto updates ([0479e53](https://github.com/antares-sql/antares/commit/0479e5307c9a9d5f791e1c61fa772d331f6f7f1f))
+* replace 'this.addNotification' with 'addNotification' in useResultTables.ts ([580bef7](https://github.com/antares-sql/antares/commit/580bef76ba390fc85df0892265f31392b80301bd))
+* unable to delete rows from context menu ([0f93d70](https://github.com/antares-sql/antares/commit/0f93d70417871f02f9f64f203f6654fa1bf2004b))
+
+
+### Improvements
+
+* improve button styles of notes ([48cfa67](https://github.com/antares-sql/antares/commit/48cfa67889bd83228c109b7966c4acea4e542fc6))
+* **MySQL:** long loading in table settings when no checks present ([9cda38e](https://github.com/antares-sql/antares/commit/9cda38e9d10e3000473863560d8be8f426a5ed17))
+
+### [0.7.31-beta.4](https://github.com/antares-sql/antares/compare/v0.7.31-beta.3...v0.7.31-beta.4) (2025-01-31)
+
+
+### Bug Fixes
+
+* **Linux:** missing window management icons ([d34e56a](https://github.com/antares-sql/antares/commit/d34e56a517784dea16a7a53bc2249072a3b96596))
+
+### [0.7.31-beta.3](https://github.com/antares-sql/antares/compare/v0.7.31-beta.2...v0.7.31-beta.3) (2025-01-31)
+
+
+### Features
+
+* implement a better query splitter for SQL queries, fixes [#926](https://github.com/antares-sql/antares/issues/926) ([96ae09f](https://github.com/antares-sql/antares/commit/96ae09fecad0c1fc8926d5dcf64cc779abe5ed49))
+* **Linux:** update title bar for better Linux experience ([8e54f7b](https://github.com/antares-sql/antares/commit/8e54f7b80135768a33934bc9336239dee38401a5))
+
+
+### Bug Fixes
+
+* **MySQL:** adjust utf8mb3 encoding to resolve compatibility issue, fixes [#646](https://github.com/antares-sql/antares/issues/646) ([27387f1](https://github.com/antares-sql/antares/commit/27387f18a107fc6c09afec5f85134496ce764355))
+
+### [0.7.31-beta.2](https://github.com/antares-sql/antares/compare/v0.7.31-beta.1...v0.7.31-beta.2) (2025-01-30)
+
+
+### Features
+
+* add developer tools and refresh buttons to console in development mode ([592d7b3](https://github.com/antares-sql/antares/commit/592d7b35170f8437ebc15221c97985e889fccb40))
+
+
+### Bug Fixes
+
+* fail to fill cell to datetime column(Postgre) fixes [#924](https://github.com/antares-sql/antares/issues/924) ([d3d7ab3](https://github.com/antares-sql/antares/commit/d3d7ab38c029fc5ec23767c6c86c49a96e4e329c))
+* reorder condition when format the update data ([e493db5](https://github.com/antares-sql/antares/commit/e493db5112478ff121e4e77f69c21747c5d2e032))
+
+### [0.7.31-beta.1](https://github.com/antares-sql/antares/compare/v0.7.31-beta.0...v0.7.31-beta.1) (2025-01-22)
+
+
+### Features
+
+* zoom in/out and fullscreen shortcuts ([47ac729](https://github.com/antares-sql/antares/commit/47ac729d2f5cced2c503358f7d45a1795f232a20))
+
+
+### Bug Fixes
+
+* cannot update column value with composite primary key and JSON column, fixes [#916](https://github.com/antares-sql/antares/issues/916) ([0029967](https://github.com/antares-sql/antares/commit/002996761997444ff689bf2384dae64ccb9ef8f7))
+* fail to duplicate JSON row ([507dc7d](https://github.com/antares-sql/antares/commit/507dc7d55b342240bf18fd58e6bc71709e8e33a0))
+* saved connections lost opening a second window after first app run ([4a2b592](https://github.com/antares-sql/antares/commit/4a2b5926f4783d0b9b1e28485e9293a25ddd31f3))
+
+
+### Improvements
+
+* **translation:** update spanish translation ([d3ae45e](https://github.com/antares-sql/antares/commit/d3ae45ec94b3538e84ac3013b285034caea695cf))
+
+### [0.7.31-beta.0](https://github.com/antares-sql/antares/compare/v0.7.30...v0.7.31-beta.0) (2025-01-06)
+
+
+### Features
+
+* **language:** add uzbek language support ([fb9c258](https://github.com/antares-sql/antares/commit/fb9c258cc10e4d85242ca533a66a95f4101d472c))
+
+
+### Bug Fixes
+
+* prevent delete confirmation modal from triggering on non-delete key presses, fixes [#906](https://github.com/antares-sql/antares/issues/906) ([8de99da](https://github.com/antares-sql/antares/commit/8de99dae7b6eb72bd6833c607d3c3a5db9508ebb))
+
 ### [0.7.30](https://github.com/antares-sql/antares/compare/v0.7.30-beta.1...v0.7.30) (2024-12-04)
 
 
